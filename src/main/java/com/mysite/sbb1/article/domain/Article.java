@@ -20,6 +20,7 @@ public class Article {
     private int id;
     @Column(length = 200)
     private String subject;
+
     @Column(columnDefinition = "TEXT")
 
     private String content;
