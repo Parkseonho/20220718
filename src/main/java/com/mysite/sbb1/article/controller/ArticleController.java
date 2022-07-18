@@ -1,102 +1,54 @@
 package com.mysite.sbb1.article.controller;
 
-import com.mysite.sbb1.article.dao.ArticleRepository;
+import com.mysite.sbb1.article.ArticleForm;
 import com.mysite.sbb1.article.domain.Article;
+import com.mysite.sbb1.article.service.ArticleService;
+import com.mysite.sbb1.reply.ReplyForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.time.LocalDateTime;
+import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @Controller
 @RequestMapping("/article")
+
 public class ArticleController {
     @Autowired
-    private ArticleRepository articleRepository;
+    private ArticleService articleService;
 
     @RequestMapping("/list")
-    @ResponseBody
-    public List<Article> showArticle(String subject, String content) {
-        if (subject != null && content == null) {
-            if(!articleRepository.existsBySubject(subject)){
-                System.out.println("제목과 일치하는 게시물이 존재하지 않습니다.");
-                return null;
-            }
-            return articleRepository.findBySubject(subject);
-        }else if (subject == null && content != null) {
-            if(!articleRepository.existsByContent(content)){
-                System.out.println("내용과 일치하는 게시물이 존재하지 않습니다.");
-                return null;
-            }
-            return articleRepository.findByContent(content);
-        } else if (subject != null && content != null) {
-            if(!articleRepository.existsBySubjectAndContent(subject, content)){
-                System.out.println("제목,내용과 일치하는 게시물이 존재하지 않습니다.");
-                return null;
-            }
-            return articleRepository.findBySubjectAndContent(subject, content);
-        }
-        return articleRepository.findAll();
+    public String showQuestions(Model model) {
+        List<Article> articlesList = articleService.getList();
+        model.addAttribute("articles",articlesList);
+        return "article";
     }
 
-    @RequestMapping("/detail")
-    @ResponseBody
-    public Article showDetail(@RequestParam int id, String name){
-        Optional<Article> article = articleRepository.findById(id);
-        return article.orElse(null);
+    @RequestMapping("/detail/{id}")
+    public String showDetail(Model model, @PathVariable("id") Integer id, ReplyForm replyForm){
+        Article article = this.articleService.getArticle(id);
+        model.addAttribute("article", article);
+        return "article_detail";
     }
 
-    @RequestMapping("/doModify")
-    @ResponseBody
-    public Article showModify(@RequestParam int id, String subject, String content) {
-        Article article = articleRepository.findById(id).get();
-        if(subject != null){
-            article.setSubject(subject);
+    @GetMapping("/create")
+    public String articleCreate(ArticleForm articleForm){
+        return "article_form";
+    }
+    @PostMapping("/create")
+    public String articleCreate(@Valid ArticleForm articleForm, BindingResult bindingResult){
+        if(bindingResult.hasErrors()){
+            return "article_form";
         }
-        if(content != null){
-            article.setContent(content);
-        }
-        article.setUpdateDate(LocalDateTime.now());
-        articleRepository.save(article); //수정된 데이터 DB에 저장
-        return article;
+
+        this.articleService.create(articleForm.getSubject(), articleForm.getContent());
+        return "redirect:/article/list";
     }
 
-    @RequestMapping("/doDelete")
-    @ResponseBody
-    public String doArticleDelete(int id) {
-        if (!articleRepository.existsById(id)) {
-            return "이미 삭제되었거나 없는 게시물입니다.";
-        }
-        articleRepository.deleteById(id);
-        return "%d번 게시물이 삭제되었습니다.".formatted(id);
-
-    }
-
-    @RequestMapping("/doWrite")
-    @ResponseBody
-    public Object showModify(@RequestParam String subject, String content) {
-        if(subject == null || subject.trim().length() == 0){
-            return "subject를 입력하여주세요";
-        }
-        if(content == null|| content.trim().length() == 0){
-            return "content를 입력하여주세요";
-        }
-        subject = subject.trim();
-        content = content.trim();
-
-        Article article = new Article();
-
-        article.setCreateDate(LocalDateTime.now());
-        article.setUpdateDate(LocalDateTime.now());
-        article.setSubject(subject);
-        article.setContent(content);
-
-        articleRepository.save(article);
-
-        return "게시물 생성 완료";
-    }
 }
