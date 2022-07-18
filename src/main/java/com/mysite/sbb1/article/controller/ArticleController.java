@@ -76,4 +76,27 @@ public class ArticleController {
 
     }
 
+    @RequestMapping("/doWrite")
+    @ResponseBody
+    public Object showModify(@RequestParam String subject, String content) {
+        if(subject == null || subject.trim().length() == 0){
+            return "subject를 입력하여주세요";
+        }
+        if(content == null|| content.trim().length() == 0){
+            return "content를 입력하여주세요";
+        }
+        subject = subject.trim();
+        content = content.trim();
+
+        Article article = new Article();
+
+        article.setCreateDate(LocalDateTime.now());
+        article.setUpdateDate(LocalDateTime.now());
+        article.setSubject(subject);
+        article.setContent(content);
+
+        articleRepository.save(article);
+
+        return "게시물 생성 완료";
+    }
 }
