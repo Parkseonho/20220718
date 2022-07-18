@@ -46,4 +46,17 @@ public class ArticleController {
         return article;
     }
 
+    @RequestMapping("/doDelete")
+    @ResponseBody
+    public String doArticleDelete(int id) {
+        if (!articleRepository.existsById(id)) {
+            return "이미 삭제되었거나 없는 게시물입니다.";
+        }
+        articleRepository.deleteById(id);
+        return "%d번 게시물이 삭제되었습니다.".formatted(id);
+
+    }
+
+
+
 }
