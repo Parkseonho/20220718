@@ -27,7 +27,7 @@ public class ReplyController {
         Article article = this.articleService.getArticle(id);
         if(bindingResult.hasErrors()){
             model.addAttribute("article", article);
-            return "/article_detail";
+            return "article_detail";
         }
 
         this.replyService.create(article, replyForm.getContent());
